@@ -2,6 +2,7 @@
 
 namespace frontend\models;
 
+use common\constants\Status;
 use Yii;
 use yii\base\Model;
 use common\models\User;
@@ -12,8 +13,10 @@ use common\models\User;
 class SignupForm extends Model
 {
     public $username;
-    public $email;
+    public $first_name;
+    public $last_name;
     public $password;
+    public $repeat_password;
 
 
     /**
@@ -22,19 +25,28 @@ class SignupForm extends Model
     public function rules()
     {
         return [
-            ['username', 'trim'],
-            ['username', 'required'],
-            ['username', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This username has already been taken.'],
-            ['username', 'string', 'min' => 2, 'max' => 255],
+            // Required fields
+            [['username', 'first_name', 'last_name', 'password', 'repeat_password'], 'required'],
 
-            ['email', 'trim'],
-            ['email', 'required'],
-            ['email', 'email'],
-            ['email', 'string', 'max' => 255],
-            ['email', 'unique', 'targetClass' => '\common\models\User', 'message' => 'This email address has already been taken.'],
+            // String length validation
+            [['username'], 'string', 'min' => 3, 'max' => 255],
+            [['first_name', 'last_name'], 'string', 'min' => 2, 'max' => 100],
+            [['password'], 'string', 'min' => 6, 'max' => 255],
 
-            ['password', 'required'],
-            ['password', 'string', 'min' => Yii::$app->params['user.passwordMinLength']],
+            // Username uniqueness (assuming User model)
+            [['username'], 'unique', 'targetClass' => User::class, 'message' => 'This username has already been taken.'],
+
+            // Username format (alphanumeric and underscore only)
+            [['username'], 'match', 'pattern' => '/^[a-zA-Z0-9_]+$/', 'message' => 'Username can only contain letters, numbers and underscore.'],
+
+            // Name validation (letters, spaces, hyphens only)
+            [['first_name', 'last_name'], 'match', 'pattern' => '/^[a-zA-Z\s\-]+$/', 'message' => 'Name can only contain letters, spaces and hyphens.'],
+
+            // Password confirmation
+            [['repeat_password'], 'compare', 'compareAttribute' => 'password', 'message' => 'Passwords do not match.'],
+
+            // Trim whitespace
+            [['username', 'first_name', 'last_name'], 'trim'],
         ];
     }
 
@@ -51,12 +63,15 @@ class SignupForm extends Model
         
         $user = new User();
         $user->username = $this->username;
-        $user->email = $this->email;
+        $user->email = $this->username;
+        $user->first_name = $this->first_name;
+        $user->last_name = $this->last_name;
+        $user->status = Status::ACTIVE->value;
         $user->setPassword($this->password);
         $user->generateAuthKey();
         $user->generateEmailVerificationToken();
 
-        return $user->save() && $this->sendEmail($user);
+        return $user->save();
     }
 
     /**

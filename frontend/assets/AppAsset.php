@@ -13,7 +13,7 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
     public $css = [
         'css/bootstrap.min.css',
-        'css/plugins.min.css',
+//        'css/plugins.min.css',
         'css/kaiadmin.min.css',
         'css/demo.css',
     ];

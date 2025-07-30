@@ -2,14 +2,39 @@
 
 namespace frontend\controllers;
 
+use common\constants\Status;
+use common\models\Event;
+use common\models\EventSearch;
 use Yii;
+use yii\db\Exception;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
+use yii\web\NotFoundHttpException;
+use yii\web\ServerErrorHttpException;
 
 class EventController extends Controller
 {
+
+    public function behaviors()
+    {
+        return [
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
+                ]
+            ]
+        ];
+    }
+
     public function actionIndex()
     {
-        // list
+        $searchModel = new EventSearch();
+        $dataProvider = $searchModel->search($this->request->queryParams);
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     public function actionCreate()
@@ -33,8 +58,24 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @throws Exception
+     * @throws NotFoundHttpException
+     * @throws ServerErrorHttpException
+     */
     public function actionDelete($id)
     {
-        //delete
+        $model = Event::find()->where([
+            'id' => $id,
+            'user_id' => Yii::$app->user->id,
+        ])->one();
+        if(is_null($model)){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+        $model->status = Status::DELETED->value;
+        if($model->save()){
+            return $this->redirect(['index']);
+        }
+        throw new ServerErrorHttpException('Failed to delete the object for unknown reason.');
     }
 }

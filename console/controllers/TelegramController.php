@@ -27,4 +27,8 @@ class TelegramController extends Controller
         $string = '/start 12312';
         var_dump(str_starts_with( $string, '/start'));
     }
+
+    function getEvents(){
+        //fill here
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace frontend\controllers;
 
+use common\helper\Telegram;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
 use Yii;
@@ -75,7 +76,14 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+
         return $this->render('index');
+    }
+
+    public function actionGetEvents($start_date, $end_date): array
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return Telegram::getEvents($start_date, $end_date, Yii::$app->user->id);
     }
 
     /**
